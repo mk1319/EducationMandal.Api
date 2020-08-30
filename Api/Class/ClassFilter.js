@@ -7,6 +7,9 @@ const connection=require('../../mysqlconnection')
 const router=express.Router()
 
 router.get("/Course",(req,res)=>{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
+
     connection.query("select distinct(Name),CourseID from newcourse",(err,rows,fields)=>{
     if(!err){
         let mymap = new Map(); 
@@ -231,9 +234,6 @@ router.post('/AllClass',(req,res)=>{
          SqlQuery.push(` class.ClassID in(select ClassID from class where City IN(${City})) `)
         }
 
-
-
-
         if(filteration.Streme.length!=0){
             Streme=''
             filteration.Streme.map((c,index)=>{
@@ -290,7 +290,6 @@ router.post('/AllClass',(req,res)=>{
                     sql+='where '
                     if(index==(SqlQuery.length-1))
                     {
-                        console.log("1")
                         sql+=SqlQuery[index]
                     }
                     else{
@@ -319,7 +318,10 @@ router.post('/AllClass',(req,res)=>{
             
         }
 
-        
+     
+    
+
+
     connection.query(sql,(err,rows,fields)=>{
         if(!err){
                   
@@ -330,6 +332,106 @@ router.post('/AllClass',(req,res)=>{
             res.json({msg:err})
         }
         })
+
+})
+
+
+
+
+router.get('/Filter',(req,res)=>{
+
+ 
+    connection.query('select * from class where Status=1',(err,rows,fields)=>{
+
+        if(!err)
+        {
+          const   Data=rows
+           
+
+            connection.query('select distinct(Name),ClassID from newcourse',(err,rows,field)=>{
+
+               if(!err){
+
+            
+                
+                Data.map((data,index)=>{
+                  let  Courses=rows.filter((rows)=>rows.ClassID==data.ClassID)
+                   Data[index]={...data,Course:Courses}
+                   //finaldata.push(data)
+                })
+                connection.query('select distinct(Name),ClassID from streme',(err,rows,fields)=>{
+
+                    if(!err)
+                    {
+                        Data.map((data,index)=>{
+                            let  Streme=rows.filter((rows)=>rows.ClassID==data.ClassID)
+                             Data[index]={...data,Streme:Streme}
+
+                             //finaldata.push(data)
+                          })
+
+                          res.send(Data)
+
+                    }
+                    else{
+
+                        return res.send({msg:"Error in Fatching Data!!"})
+
+                    }
+
+                  
+                })
+            }
+            else{
+                res.status(400)
+                res.send({msg:"Error in Fatching Data!!"})
+            }
+                
+
+
+            })
+        }
+        else{
+
+            res
+        }
+
+
+    })
+})
+
+
+
+
+
+
+
+
+
+
+//SearchBy Name etc..
+router.post('/Search',(req,res)=>{
+
+    const search=req.body.Search;
+
+//       console.log(search.replace(/'/g,"\\'"))
+
+    let sql='SELECT Class.Name,Class.Email,class.Contact,classimage.Logo,classimage.Image'+
+    ' From class Left Join classimage on class.ClassID=classimage.ClassID '+
+    'where (class.Name Like "%'+search+'%" or class.City Like "%'+search+'%" or class.State '+ 
+    ' Like "%'+search+'%") and class.Status=1'
+
+    connection.query(sql,(err,rows,fields)=>{   
+        if(!err)
+        {
+            res.send(rows)
+        }
+        else
+        {
+            res.status(400)
+            res.send({meg:"Error in Fatching Data"})
+        }
+    })
 
 })
 

@@ -2,7 +2,7 @@ const mysql=require('mysql')
 
 var connection = mysql.createConnection({
     host: 'localhost',
-    user: 'root',
+    user: 'root2',
     password: '1234',
     database: 'educationmandal',
     multipleStatements:true,

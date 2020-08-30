@@ -1,5 +1,6 @@
 const express=require('express')
 const connection=require('../../mysqlconnection')
+const { request } = require('express')
 
 const router=express.Router()
 
@@ -48,6 +49,30 @@ router.post('/NewUser',(req,res)=>{
     })
 })
 
+
+router.post('/Login',(req,res)=>{
+        let email=req.body.email
+        let Password=req.body.Password
+
+        connection.query(`select * from register where email=?`,[email],(err,rows,fields)=>{
+            if(!err)
+            {
+                if(rows.length==0){
+                       return res.send({message:"Email is not register!!"})
+                }
+                if(rows[0].Password!==Password){
+                    return    res.send({message:"Incorrect Password"})
+                }
+
+                
+                return res.send(rows)
+            }
+            else{
+                res.status(400)
+                res.send({msg:"Error in Fatching Data!"})
+            }
+        })
+})
 
 
 

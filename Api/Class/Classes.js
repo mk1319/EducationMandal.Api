@@ -34,11 +34,12 @@ router.get("/FullData/:id",(req,res)=>{
                         }
             })
 })
+
 //ClassBrance
 router.get("/Brance/:id",(req,res)=>{
-
+    
     connection.query(`select * from brance where ClassId=${req.params.id}`,(err,rows,fields)=>{
-
+        
         if(!err){
 
             res.send(rows)
@@ -47,7 +48,7 @@ router.get("/Brance/:id",(req,res)=>{
             res.status(400)
             res.json({msg:"Error in Fatching Data!"})
         }
-
+    
     })
 })
 //ClassBlog
@@ -65,6 +66,10 @@ router.get("/ClassBlog/:id",(req,res)=>{
 
 //all student by classid
 router.get("/AllStudent/:id",(req,res)=>{
+
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
+
 
     let sql="select student.StudentID,student.Name,student.Picture,"
     +"studentdetail.SchoolName,studentdetail.InstaLink,studentdetail.FacebookLink,studentdetail.TwitterLink "

@@ -1,7 +1,6 @@
 const express=require('express')
 const connection=require('../../mysqlconnection')
-const { request } = require('express')
-
+const jwtencode=require('jwt-simple')
 const router=express.Router()
 
 
@@ -18,11 +17,9 @@ router.post('/NewUser',(req,res)=>{
         
         d=new Date()
         date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
-        
-        console.log(date)
+
 
     connection.query(`select * from register where Email='${Email}'`,(err,rows,fields)=>{
-
         if(!err){
             if(rows.length==0)
             { 
@@ -58,18 +55,20 @@ router.post('/Login',(req,res)=>{
             if(!err)
             {
                 if(rows.length==0){
-                       return res.send({message:"Email is not register!!"})
+                       return res.send({isLogin:false,msg:"Email is not register!!"})
                 }
                 if(rows[0].Password!==Password){
-                    return    res.send({message:"Incorrect Password"})
+                    return    res.send({msg:"Incorrect Password",isLogin:false})
                 }
+                d=new Date()
+                date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+            connection.query('Update register set LastLogin=? where ID=?',[d,rows[0].ID])
 
-                
-                return res.send(rows)
+                return res.send({Email:rows[0].Email,ID:rows[0].ID,User:rows[0].UserType,isLogin:true})
             }
             else{
                 res.status(400)
-                res.send({msg:"Error in Fatching Data!"})
+                res.send({msg:"Error in Fatching Data!",isLogin:false})
             }
         })
 })

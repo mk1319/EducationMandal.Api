@@ -23,8 +23,6 @@ router.get("/FullData/:id",(req,res)=>{
                         if(!err){
                             rows[0].map((row)=>{
                                 data.push(row={...row,classbrief:rows[1][0],classimage:rows[2][0],classlocation:rows[3][0]})
-                                
-
                             })
                             res.send(data)
                         }
@@ -37,7 +35,6 @@ router.get("/FullData/:id",(req,res)=>{
 
 //ClassBrance
 router.get("/Brance/:id",(req,res)=>{
-    
     connection.query(`select * from brance where ClassId=${req.params.id}`,(err,rows,fields)=>{
         
         if(!err){
@@ -51,6 +48,7 @@ router.get("/Brance/:id",(req,res)=>{
     
     })
 })
+
 //ClassBlog
 router.get("/ClassBlog/:id",(req,res)=>{
     connection.query(`select * from blog where ClassId=${req.params.id}`,(err,rows,fields)=>{
@@ -71,7 +69,7 @@ router.get("/AllStudent/:id",(req,res)=>{
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
 
 
-    let sql="select student.StudentID,student.Name,student.Picture,"
+    let sql="select student.StudentID,student.Name,student.Picture,student.Rate"
     +"studentdetail.SchoolName,studentdetail.InstaLink,studentdetail.FacebookLink,studentdetail.TwitterLink "
     +`from student,studentdetail where ClassID=${req.params.id}`
 
@@ -88,11 +86,10 @@ router.get("/AllStudent/:id",(req,res)=>{
 
 //AllTeacherBy ClassId
 router.get("/AllTeacher/:id",(req,res)=>{
-
-    let sql="select teacher.TeacherID,teacher.Name,"+
+    let sql="select teacher.TeacherID,teacher.Name,teacher.Rate"+
     "teacherdetail.InstaLink,teacherdetail.FacebookLink,teacherdetail.TwitterLink"
      +` from teacher,teacherdetail where ClassID=${req.params.id}`
-        
+     
     connection.query(sql,(err,rows,fields)=>{
         if(!err){
             res.send(rows)

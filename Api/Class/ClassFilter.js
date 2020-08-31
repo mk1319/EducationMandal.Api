@@ -7,8 +7,6 @@ const connection=require('../../mysqlconnection')
 const router=express.Router()
 
 router.get("/Course",(req,res)=>{
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
 
     connection.query("select distinct(Name),CourseID from newcourse",(err,rows,fields)=>{
     if(!err){
@@ -36,11 +34,11 @@ router.get("/Streme",(req,res)=>{
     connection.query("select StremeID,Name from Streme",(err,rows,fields)=>{
     if(!err){
         let mymap = new Map(); 
-        unique = rows.filter(e => { 
+        unique = rows.filter(e => {
             const val = mymap.get(e.Name); 
             if(val) { 
                     return false; 
-            } 
+            }
             mymap.set(e.Name, e.StremeID); 
             return true; 
         });
@@ -55,18 +53,10 @@ router.get("/Streme",(req,res)=>{
 
 //State
 router.get("/State",(req,res)=>{
-    connection.query("select ClassID,State from class",(err,rows,fields)=>{
+    connection.query("select Distinct(State) from class",(err,rows,fields)=>{
     if(!err){
-        let mymap = new Map(); 
-        unique = rows.filter(e => { 
-            const val = mymap.get(e.State); 
-            if(val) { 
-                    return false; 
-            } 
-            mymap.set(e.State, e.ClassID); 
-            return true; 
-        });
-         res.send(unique)
+
+         res.send(rows)
     }
     else{
         res.status(400)
@@ -78,18 +68,10 @@ router.get("/State",(req,res)=>{
 
 //Cityies
 router.get("/City",(req,res)=>{
-    connection.query("select ClassID,City from class",(err,rows,fields)=>{
+    connection.query("select Distinct(City) from class",(err,rows,fields)=>{
     if(!err){
-        let mymap = new Map(); 
-        unique = rows.filter(e => { 
-            const val = mymap.get(e.City); 
-            if(val) { 
-                    return false; 
-            } 
-            mymap.set(e.City, e.ClassID); 
-            return true; 
-        });
-         res.send(unique)
+
+         res.send(rows)
     }
     else{
         res.status(400)
@@ -317,11 +299,6 @@ router.post('/AllClass',(req,res)=>{
                 }
             
         }
-
-     
-    
-
-
     connection.query(sql,(err,rows,fields)=>{
         if(!err){
                   
@@ -346,14 +323,10 @@ router.get('/Filter',(req,res)=>{
         if(!err)
         {
           const   Data=rows
-           
-
             connection.query('select distinct(Name),ClassID from newcourse',(err,rows,field)=>{
 
                if(!err){
-
-            
-                
+                   
                 Data.map((data,index)=>{
                   let  Courses=rows.filter((rows)=>rows.ClassID==data.ClassID)
                    Data[index]={...data,Course:Courses}
@@ -369,7 +342,6 @@ router.get('/Filter',(req,res)=>{
 
                              //finaldata.push(data)
                           })
-
                           res.send(Data)
 
                     }

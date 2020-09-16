@@ -1,6 +1,5 @@
 const express=require('express')
 const connection=require('../../mysqlconnection')
-
 const router=express.Router()
 
 
@@ -13,45 +12,85 @@ const router=express.Router()
 //FullData
 router.get("/FullData/:id",(req,res)=>{
 
-        let sql="SELECT * FROM CLASS where ClassID=?;"+"SELECT * FROM CLASSBRIEF WHERE ClassID =?;"+
-            "select * from classimage where ClassID=?;"+"select * from classlocation where ClassID=?;";
+        let sql="select Class.ClassID,Class.Name,Class.Email,Class.Contact,Class.City,Class.Town,Class.State,Class.Type,Class.Pincode,Class.Address,Class.Rate,Classbrief.Vission,Classbrief.Mission,Classbrief.Vission,Classbrief.Tagline,Classbrief.YearOfCorp,Classimage.Logo,Classimage.Image,"
+        +" Classlocation.Lon,Classlocation.Lat,Classlocation.Address as googleaddress from class left join Classbrief on "+
+        " Class.ClassID=Classbrief.ClassID left join Classimage on Classimage.ClassID=Class.ClassID left join Classlocation on Classlocation.ClassID=Class.ClassID where Class.ClassID=?";
 
-            const data=[]
+            
 
             let id=req.params.id
-            connection.query(sql,[id,id,id,id],(err,rows,fields)=>{
-                        if(!err){
-                            rows[0].map((row)=>{
-                                data.push(row={...row,classbrief:rows[1][0],classimage:rows[2][0],classlocation:rows[3][0]})
-                            })
-                            res.send(data)
+            let Data=[]
+            connection.query(sql,[id],(err,rows,fields)=>{
+                if(!err)
+                {
+                     Data=rows[0]
+                    
+                    connection.query(`select * from Brance where ClassID=?`,id,(err,rows,fields)=>{
+                        if(!err)
+                        {
+                            Data={...Data,Brance:rows}
+
+                            connection.query('Select Name,Rate,TeacherID as ID,Rate,Picture from Teacher where ClassId=?',id,(err,rows,fields)=>{
+                                if(!err)
+                                {   
+                                    Data={...Data,Teacher:rows}
+
+                                    connection.query('select Name,Picture,Rate,StudentType,StudentID as ID,LastName from Student where ClassID=?',id,(err,rows,fields)=>{
+                                        if(!err)
+                                        {
+                                            Data={...Data,Student:rows}
+                                            connection.query(`select * from classreview where ClassID=? and Vissible=1 order by Rate Desc`,id,(err,rows,fields)=>{
+                                                if(!err){
+                                                    res.send({...Data,Review:rows})
+                                                }
+                                                else{
+                                                    res.send(Data)
+                                                }
+                                            })
+                                        }
+                                        else{
+                                            res.send(Data)
+                                        }
+                                    })
+                                }
+                                else{
+
+                                    res.send(Data)
+                                }
+                            })                        
                         }
                         else{
-                            res.status(400)
-                            res.json({msg:"Error in Fatching Data!"})
+                            res.send(Data)
                         }
+                        })
+                }
+                else
+                {
+                        res.status(400)
+                        res.json({msg:"Error in Fatching Data!"})
+                }
             })
 })
 
-//ClassBrance
-router.get("/Brance/:id",(req,res)=>{
-    connection.query(`select * from brance where ClassId=${req.params.id}`,(err,rows,fields)=>{
+// //ClassBrance
+// router.get("/Brance/:id",(req,res)=>{
+//     connection.query(`select * from Brance where ClassId=${req.params.id}`,(err,rows,fields)=>{
         
-        if(!err){
+//         if(!err){
 
-            res.send(rows)
-        }
-        else{
-            res.status(400)
-            res.json({msg:"Error in Fatching Data!"})
-        }
+//             res.send(rows)
+//         }
+//         else{
+//             res.status(400)
+//             res.json({msg:"Error in Fatching Data!"})
+//         }
     
-    })
-})
+//     })
+// })
 
 //ClassBlog
 router.get("/ClassBlog/:id",(req,res)=>{
-    connection.query(`select * from blog where ClassId=${req.params.id}`,(err,rows,fields)=>{
+    connection.query(`select * from Blog where ClassId=${req.params.id}`,(err,rows,fields)=>{
         if(!err){   
             res.send(rows)
         }
@@ -62,35 +101,57 @@ router.get("/ClassBlog/:id",(req,res)=>{
     })
 })
 
-//all student by classid
-router.get("/AllStudent/:id",(req,res)=>{
 
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
+// //all Student by Classid
+// router.get("/AllStudent/:id",(req,res)=>{
 
+//     let sql="select Student.StudentID,Student.Name,Student.Picture,Student.Rate,"
+//     +"Studentdetail.SchoolName,Studentdetail.InstaLink,Studentdetail.FacebookLink,Studentdetail.TwitterLink "
+//     +`from Student,Studentdetail where ClassID=${req.params.id}`
 
-    let sql="select student.StudentID,student.Name,student.Picture,student.Rate"
-    +"studentdetail.SchoolName,studentdetail.InstaLink,studentdetail.FacebookLink,studentdetail.TwitterLink "
-    +`from student,studentdetail where ClassID=${req.params.id}`
+//     connection.query(sql,(err,rows,fields)=>{
+//                 if(!err){
+//                     res.send(rows)
+//                 }
+//                 else{
+//                     res.status(400)
+//                     res.send({msg:"Error in Fatching Data",err})
+//                 }
+//     })
+// })
 
-    connection.query(sql,(err,rows,fields)=>{
-                if(!err){
-                    res.send(rows)
+//Teacher By Id
+router.get("/TeacherProfile/:id",(req,res)=>{
+    let sql="select Teacher.Name,Teacher.TeacherId,Teacher.Email,Teacher.Contact,Teacher.Rate,Teacher.Picture,Teacherdetail.Qualification,Teacherdetail.Experience,Teacherdetail.Biogrphy from Teacher left join Teacherdetail on Teacher.TeacherID =Teacherdetail.TeacherID WHERE Teacher.TeacherID=?";
+     
+    connection.query(sql,req.params.id,(err,rows,fields)=>{
+        if(!err){
+            let Data=rows[0]
+            connection.query('select Name,TeacherID,Message,Rate,Date,ID  from Teacherreview where  Vissible=1 and TeacherID=?',req.params.id,(err,rows,fields)=>{
+                if(!err)
+                {
+                    Data={...Data,Review:rows}
+                    res.send(Data)
                 }
                 else{
-                    res.status(400)
-                    res.send({msg:"Error in Fatching Data"})
+                    res.send(Data)
                 }
+            })
+        }
+        else{
+            res.status(400)
+            res.send({msg:"Error in Fatching Data"})
+        }
     })
 })
 
+
 //AllTeacherBy ClassId
 router.get("/AllTeacher/:id",(req,res)=>{
-    let sql="select teacher.TeacherID,teacher.Name,teacher.Rate"+
-    "teacherdetail.InstaLink,teacherdetail.FacebookLink,teacherdetail.TwitterLink"
-     +` from teacher,teacherdetail where ClassID=${req.params.id}`
+    let sql="select Teacher.Name,Teacher.TeacherId,Teacher.Email,Teacher.Contact,Teacher.Rate,Teacher.Picture,Teacherdetail.Qualification,Teacherdetail.Experience,Teacherdetail.Biogrphy from Teacher left join Teacherdetail on Teacher.TeacherID =Teacherdetail.TeacherID WHERE ClassID=?";
+
      
-    connection.query(sql,(err,rows,fields)=>{
+    connection.query(sql,req.params.id,(err,rows,fields)=>{
         if(!err){
             res.send(rows)
         }
@@ -101,6 +162,8 @@ router.get("/AllTeacher/:id",(req,res)=>{
     })
 
 })
+
+
 
 
 
@@ -138,11 +201,11 @@ router.get("/Streme/:id",(req,res)=>{
     })
 })
 
+
 //All Review
 
-router.get("/ALlReview/:id",(req,res)=>{
-
-    connection.query(`select * from classreview where ClassID=${req.params.id}`,(err,rows,fields)=>{
+router.get("/AllReview/:id",(req,res)=>{
+    connection.query(`select * from classreview where ClassID=? and Vissible=1 order by Rate Desc`,req.params.id,(err,rows,fields)=>{
             if(!err){
                 res.send(rows)
             }

@@ -6,10 +6,10 @@ const Userrouter=require('./Api/User/UserData')
 const Blog=require('./Api/Blog/Blog')
 const Admin=require('./Api/Admin/Class')
 const cors=require('cors')
-
+const fileUpload = require('express-fileupload');
+ 
 
 const ClassDashboard=require('./Api/ClassDash/ClassData')
-
 
 
 const PORT=process.env.PORT || 5000
@@ -18,6 +18,7 @@ const PORT=process.env.PORT || 5000
 const app=express()
 
 
+app.use(fileUpload());
 app.use(cors())
 //BodyParser
 app.use(body.json())

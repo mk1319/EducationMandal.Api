@@ -8,7 +8,7 @@ const router=express.Router()
 
 router.get('/',(req,res)=>{
 
-    connection.query('select * from educationmandalblog',(err,rows,fields)=>{
+    connection.query('select * from Educationmandalblog',(err,rows,fields)=>{
         if(!err)
         {
             res.send(rows);

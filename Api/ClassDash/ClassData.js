@@ -1,13 +1,19 @@
 const express=require('express')
 const connection=require('../../mysqlconnection')
+const uuid=require('uniqid')
+const fs=require('fs')
+
+
 
 const router=express.Router()
 
 
-router.get('/Allstudent/:id',(req,res)=>{
+router.get('/AllStudent/:id',(req,res)=>{
 
-    let sql=`select student.Name,student.Email,student.Contact,student.StudentID,student.UniqueID,student.Picture,batch.BatchName,student.Rate,batch.BatchID from student left join studentbatch
-    on student.StudentID=studentbatch.StudentID  left join batch on batch.BatchID=studentbatch.BatchID  where student.ClassID=${req.params.id}`
+
+
+    let sql=`select Student.Name,Student.Email,Student.Contact,Student.StudentID,Student.UniqueID,Student.Picture,batch.BatchName,Student.Rate,batch.BatchID from Student left join Studentbatch
+    on Student.StudentID=Studentbatch.StudentID  left join batch on batch.BatchID=Studentbatch.BatchID  where Student.ClassID=${req.params.id}`
     connection.query(sql,(err,rows,fields)=>{
         if(!err)
         {
@@ -21,7 +27,23 @@ router.get('/Allstudent/:id',(req,res)=>{
 
 //Create Batch.
 router.post('/CreateBatch',(req,res)=>{
-    res.send('Creating on process')
+    
+
+    Name=req.body.CourseName
+    BacthName=req.body.BacthName
+    Term=req.body.Term
+    ClassID=req.body.ClassID
+
+    connection.query('insert into Batch(CourseName,BatchName,Term,ClassID) value(?,?,?,?)',[Name,BacthName,Term,ClassID],(err,rows,fields)=>{
+        if(!err)
+        {
+            res.send({msg:"Batch Created    "})
+        }
+        else{
+            res.send({mes:"Error in Inserting of Data"})
+        }
+    })
+
 })
 
 
@@ -34,7 +56,7 @@ router.post('/CreateBatch',(req,res)=>{
 
 router.get('/Batch/:id',(req,res)=>{
 
-    let sql=`select BatchName,BatchID from batch where ClassID=${req.params.id}`
+    let sql=`select BatchName,BatchID from Batch where ClassID=${req.params.id}`
 
     connection.query(sql,(err,rows,fields)=>{
         if(!err)
@@ -52,16 +74,12 @@ router.get('/Batch/:id',(req,res)=>{
 
 router.post('/NewStudent',(req,res)=>{
 
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
-    res.header('Access-Control-Allow-Methods', 'POST')
-
     let Email,Name,ClassID,BatchID
     Email=req.body.Email
     Name=req.body.Name
     ClassID=req.body.ClassID
     BatchId=req.body.BID
-    
+    UniqueID=uuid('',Email.slice(0,-9)).slice(5)
     
     d=new Date()
     date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
@@ -72,11 +90,11 @@ connection.query(`select * from Student where Email='${Email}'`,(err,rows,fields
     if(!err){
         if(rows.length==0)
         { 
-            let sql="insert into student(Name,Email,Date,StudentType,ClassId) Values(?,?,?,?,?)"
-            connection.query(sql,[Name,Email,date,1,ClassID],(error,rows,fields)=>{
+            let sql="insert into Student(Name,Email,Date,StudentType,ClassId,UniqueID) Values(?,?,?,?,?,?)"
+            connection.query(sql,[Name,Email,date,1,ClassID,UniqueID],(error,rows,fields)=>{
                if(!error)
                {
-                connection.query("insert into studentbatch value(?,?)",[rows.insertId,BatchId],(err,rows,fields)=>{
+                connection.query("insert into Studentbatch value(?,?)",[rows.insertId,BatchId],(err,rows,fields)=>{
                         if(!err)
                         {
                             res.send({mes:"Data Inserted."})
@@ -107,11 +125,8 @@ connection.query(`select * from Student where Email='${Email}'`,(err,rows,fields
 
 router.get('/AllTeacher/:id',(req,res)=>{
 
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
 
-
-    let sql=`select teacher.Name,teacher.Email,teacher.Contact,teacher.TeacherID,teacher.UniqueID,Teacher.Picture,Teacher.Rate from teacher where ClassID=${req.params.id}`
+    let sql=`select Teacher.Name,Teacher.Email,Teacher.Contact,Teacher.TeacherID,Teacher.UniqueID,Teacher.Picture,Teacher.Rate from Teacher where ClassID=${req.params.id}`
 
     connection.query(sql,(err,rows,fields)=>{
         if(!err)
@@ -126,30 +141,26 @@ router.get('/AllTeacher/:id',(req,res)=>{
 
 
 
-//Create teacher login .
+//Create Teacher login .
 router.post('/NewTeacher',(req,res)=>{
-
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
-    res.header('Access-Control-Allow-Methods', 'POST')
-
 
     let Email,Name,ClassID
     Email=req.body.Email
     Name=req.body.Name
     ClassID=req.body.ClassID
+    UniqueID=uuid('',Email.slice(0,-9)).slice(5)
 
     
     d=new Date()
     date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
     
 
-connection.query(`select * from teacher where Email='${Email}'`,(err,rows,fields)=>{
+connection.query(`select * from Teacher where Email='${Email}'`,(err,rows,fields)=>{
 
     if(!err){
         if(rows.length==0)
         { 
-            let sql="insert into teacher(Name,Email,Date,ClassId) Values(?,?,?,?)"
+            let sql="insert into Teacher(Name,Email,Date,ClassId) Values(?,?,?,?)"
             connection.query(sql,[Name,Email,date,ClassID],(error,rows,fields)=>{
                if(!error)
                {
@@ -178,9 +189,6 @@ connection.query(`select * from teacher where Email='${Email}'`,(err,rows,fields
 //Update Student data
 router.put('/UpdateStudent',(req,res)=>{
 
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
-    res.header('Access-Control-Allow-Methods', 'POST')
 
     console.log(req.body)
 
@@ -190,11 +198,11 @@ router.put('/UpdateStudent',(req,res)=>{
     BatchID=req.body.BatchID
     
 
-connection.query(`UPDATE student SET Name=?,Email =? WHERE StudentID=?`,[Name,Email,StudentID],(err,rows,fields)=>{
+connection.query(`UPDATE Student SET Name=?,Email =? WHERE StudentID=?`,[Name,Email,StudentID],(err,rows,fields)=>{
 
     if(!err){
         
-            let sql=`UPDATE studentbatch SET BatchID=? WHERE StudentID=?`
+            let sql=`UPDATE Studentbatch SET BatchID=? WHERE StudentID=?`
  
             console.log(sql)
             connection.query(sql,[BatchID,StudentID],(error,rows,fields)=>{
@@ -215,13 +223,9 @@ connection.query(`UPDATE student SET Name=?,Email =? WHERE StudentID=?`,[Name,Em
 })
 
 
-//Update teacher
+//Update Teacher
 
 router.put('/UpdateTeacher',(req,res)=>{
-
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Content-Type, Accept");
-    res.header('Access-Control-Allow-Methods', 'POST')
 
 
     Email=req.body.Email
@@ -229,7 +233,7 @@ router.put('/UpdateTeacher',(req,res)=>{
     TeacherID=req.body.StudentID
     
 
-connection.query(`UPDATE teacher SET Name=?,Email =? WHERE TeacherID=?`,[Name,Email,TeacherID],(err,rows,fields)=>{
+connection.query(`UPDATE Teacher SET Name=?,Email =? WHERE TeacherID=?`,[Name,Email,TeacherID],(err,rows,fields)=>{
 
     if(!err){
             res.send({mes:"Data Updated"})
@@ -258,7 +262,7 @@ router.post('/NewCourse',(req,res)=>{
         DiscountedAmount=req.body.DiscountedAmount
 
 
-let sql=`insert into newcourse(ClassID,Name,Discription,TotalFess,StartDate,EndDate,Duration,TeachBy,DiscountedAmount)
+let sql=`insert into Newcourse(ClassID,Name,Discription,TotalFess,StartDate,EndDate,Duration,TeachBy,DiscountedAmount)
 value(?,?,?,?,?,?,?,?,?)`
 
 console.log(sql)
@@ -284,7 +288,7 @@ router.post('/Login',(req,res)=>{
     let email=req.body.email
     let Password=req.body.Password
 
-    connection.query(`select * from classlogin where email=?`,[email],(err,rows,fields)=>{
+    connection.query(`select * from Classlogin where Email=?`,[email],(err,rows,fields)=>{
         if(!err)
         {
             if(rows.length==0){
@@ -296,7 +300,7 @@ router.post('/Login',(req,res)=>{
 
             d=new Date()
             date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
-            connection.query('Update classlogin set LastLogin=? where AccessID=?',[d,rows[0].AccessID])
+            connection.query('Update Classlogin set LastLogin=? where AccessID=?',[d,rows[0].AccessID])
 
             return res.send({Email:rows[0].Email,ID:rows[0].ClassID,User:rows[0].UserType,Name:rows[0].Name,AccessID:rows[0].AccessID,isLogin:true})
         }
@@ -311,7 +315,7 @@ router.post('/Login',(req,res)=>{
 
 
 
-//New User for DashBoard Login only class owner can do that.
+//New User for DashBoard Login only Class owner can do that.
 
 
 router.post('/NewLogin',(req,res)=>{
@@ -321,18 +325,19 @@ router.post('/NewLogin',(req,res)=>{
     Contact=req.body.Contact
     Name=req.body.Name
     UserType=req.body.UserType
+    Password=uuid().slice(5)
     ClassID=req.body.ClassID
     
     d=new Date()
     date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
 
 
-connection.query(`select * from classlogin where Email='${Email}'`,(err,rows,fields)=>{
+connection.query(`select * from Classlogin where Email='${Email}'`,(err,rows,fields)=>{
     if(!err){
         if(rows.length==0)
         { 
-            let sql="insert into classlogin(ClassID,Name,Email,Contact,UserType,Date) Values(?,?,?,?,?,?)"
-            connection.query(sql,[ClassID,Name,Email,Contact,UserType,date],(error,rows,fields)=>{
+            let sql="insert into Classlogin(ClassID,Name,Email,Contact,Password,UserType,Date) Values(?,?,?,?,?,?,?)"
+            connection.query(sql,[ClassID,Name,Email,Contact,Password,UserType,date],(error,rows,fields)=>{
                if(!error)
                {
                  res.send(rows)
@@ -355,9 +360,128 @@ connection.query(`select * from classlogin where Email='${Email}'`,(err,rows,fie
 })
 
 
+router.post('/Forgatepassword',(req,res)=>{
+
+    Email=req.body.Email
+    Password=uuid().slice(5)
+
+    connection.query('select * from Classlogin where Email=?',[Email],(err,rows,fields)=>{
+
+        if(!err)
+        {
+
+                if(rows.length!==0)
+                {
+
+                    connection.query('update Classlogin set Password=? where Email=?',[Password,Email])   
+                    //call function to send mail..
+                    res.send({msg:"Email is Sent to With New Password"})
+                }
+                else{
+                    res.send({msg:"Email is Not Reagister in Databse!"})
+                }
+
+
+        }
+        else{
+            res.send({msg:"Error in Updatation!!"})
+        }
+
+
+    })
+})
 
 
 
+
+
+//Upload Class Logo
+
+router.post('/UploadLogo/:id', (req, res) => {
+
+    const file = req.files.file;
+    const ClassID=req.params.id
+
+    
+    connection.query('select Logo  from  Classimage where ClassID=? ',[ClassID],(err,rows,fields)=>{
+          
+       if (req.files === null) {
+         return res.status(400).json({ msg: 'No file uploaded' });
+       }
+     
+       
+       file.name=`${uuid()}${ClassID}.${file.name.split('.').pop()}`
+     
+       file.mv(`${__dirname.split('\\').slice(0,-3).join('\\')}/public/assest/Class/Logo/${file.name}`, err =>{
+        console.log(__dirname.split('\\').slice(0,-3))
+
+         if (err) {
+           return res.send({msg:"File not uploded"});
+         }
+
+
+         if(rows.length===0)
+         {
+            connection.query('insert into Classimage(Logo,ClassID) value(?,?)',[file.name,ClassID])
+            return res.json({ fileName: file.name, filePath:`${file.name}`});
+         }
+
+         fs.unlink(`${__dirname.split('\\').slice(0,-3).join('\\')}/public/assest/Class/Logo/${rows[0].Logo}`, function (err) {});
+
+         connection.query('update Classimage set Logo=? where ClassID=?',[file.name,ClassID])
+
+
+
+         res.json({ fileName: file.name, filePath: `/uploads/${file.name}`});
+       });
+
+    })
+  });
+
+
+//Class Image
+
+router.post('/UploadImage/:id', (req, res) => {
+
+    const file = req.files.file;
+    const ClassID=req.params.id
+
+    
+    connection.query('select Image  from  Classimage where ClassID=? ',[ClassID],(err,rows,fields)=>{
+          
+       if (req.files === null) {
+         return res.status(400).json({ msg: 'No file uploaded' });
+       }
+     
+       
+       file.name=`${uuid()}${ClassID}.${file.name.split('.').pop()}`
+     
+       file.mv(`${__dirname.split('\\').slice(0,-2).join('\\')}/assest/Class/Image/${file.name}`, err =>{
+
+        console.log(__dirname.split('\\'))
+
+         if (err) {
+           return res.send({msg:"File not uploded"});
+         }
+
+
+         if(rows.length===0)
+         {
+            connection.query('insert into Classimage(Image,ClassID) value(?,?)',[file.name,ClassID])
+            return res.json({ fileName: file.name, filePath:`${file.name}`});
+         }
+
+         fs.unlink(`${__dirname.split('\\').slice(0,-2).join('\\')}/assest/Class/Image/${rows[0].Logo}`, function (err) {});
+
+         connection.query('update Classimage set Image=? where ClassID=?',[file.name,ClassID])
+
+
+
+         res.json({ fileName: file.name, filePath: `/uploads/${file.name}`});
+       });
+
+    })
+  });
 
 
 

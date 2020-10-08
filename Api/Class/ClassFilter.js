@@ -1,5 +1,4 @@
 const express=require('express')
-const fileUpload = require('express-fileupload')
 const connection=require('../../mysqlconnection')
 
 
@@ -74,12 +73,15 @@ router.get('/Filter/:start',(req,res)=>{
 
 
 //SearchBy Name etc..
+
+//SearchBy Name etc..
 router.post('/Search',(req,res)=>{
+
     const search=req.body.Search;
-//       console.log(search.replace(/'/g,"\\'"))
+
 
     let sql='SELECT Class.ClassID, Class.Name,Class.City,Class.State,Class.Town,Class.Email,Class.Contact,Classimage.Logo,Classimage.Image, Class.Type,Classvisitor.Rate '+
-    ' From Class Left Join Classimage on Class.ClassID=Classimage.ClassID left join classvisitor on Class.ClassID=classvisitor.ClassID  '+
+    ' From Class Left Join Classimage on Class.ClassID=Classimage.ClassID left join Classvisitor on Class.ClassID=Classvisitor.ClassID  '+
     'where (Class.Name Like "%'+search+'%" or Class.City Like "%'+search+'%" or Class.State '+ 
     ' Like "%'+search+'%") and Class.Status=1'
 
@@ -130,12 +132,13 @@ router.post('/Search',(req,res)=>{
         }
         else{
 
-            res
+            res.send({msg:"Error in Fatching Data!"})
         }
 
 
     })
 })
+
 
 
 //Filter for option grp
@@ -150,10 +153,9 @@ router.post('/FilterData',(req,res)=>{
     state=req.body.Filter.State.length?req.body.Filter.State:['']
     type=req.body.Filter.Type
 
-
     let Data=[]
 
-    connection.query('Select ClassID from NewCourse where Name In (?);',[course],(err,rows,fields)=>{
+    connection.query('Select ClassID from Newcourse where Name In (?);',[course],(err,rows,fields)=>{
         if(!err)
         {
             rows.filter((id)=>Data.push(id.ClassID))
@@ -163,7 +165,7 @@ router.post('/FilterData',(req,res)=>{
                 {
                     rows.filter((id)=>Data.push(id.ClassID))
 
-                    connection.query('select ClassID from class where City In (?) or State In (?) or Type=?',
+                    connection.query('select ClassID from Class where City In (?) or State In (?) or Type=?',
                                 [city,state,type],(err,rows,fields)=>{
                         if(!err)
                         {
@@ -205,23 +207,6 @@ router.post('/FilterData',(req,res)=>{
 
     })
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

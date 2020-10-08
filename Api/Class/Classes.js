@@ -4,11 +4,6 @@ const router=express.Router()
 
 
 
-
-
-
-
-
 //FullData
 router.get("/FullData/:id",(req,res)=>{
 

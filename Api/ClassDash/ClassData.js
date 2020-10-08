@@ -7,10 +7,120 @@ const fs=require('fs')
 
 const router=express.Router()
 
+//Add category
+router.post('/NewCategory/:id',(req,res)=>{
+
+    let sql="insert into Stream(ClassID,Name,TotalFess) value(?,?,?)";
+
+    connection.query(sql,[req.params.id,req.body.Name,req.body.TotalFess],(err,rows,fields)=>{
+        if(!err)
+        {
+            res.send({msg:"New Catergory Added Successfully."})
+        }
+        else{
+            res.send({msg:"Error During insertaion."})
+        }
+    })
+})
+
+
+//Select All Category
+router.get('/AllCategory/:id',(req,res)=>{
+
+    let sql="Select StreamID,Name,TotalFess from Stream;";
+
+    connection.query(sql,(err,rows,fields)=>{
+        if(!err)
+        {
+            res.send(rows)
+        }
+        else{
+            res.send({msg:"Error in Fatching Data!"})
+        }
+    })
+})
+
+//Delete Category
+router.post('/DeleteCategory/:ClassID',(req,res)=>{
+
+    let sql="Delete from Stream where StreamID=? and ClassID=?";
+    connection.query("delete from subject where StreamID=?",[req.body.ID],(err,rows,fields)=>{
+        if(!err)
+        {
+            connection.query(sql,[req.body.ID,req.params.ClassID],(err,rows,fields)=>{
+                if(!err)
+                {
+                    res.send({msg:"Data Deleted!"})
+                }
+                else{
+                    res.send(err)
+                }
+            })
+        }
+    })
+})
+
+
+//Add Course 
+router.post('/NewSingleCategory',(req,res)=>{
+
+    let sql="insert into subject(StreamID,Name,Description,Fess,TeacherName) value(?,?,?,?,?)";
+
+    connection.query(sql,[req.body.StreamID,req.body.Name,req.body.Description,req.body.Fess,req.body.TeacherName],(err,rows,fields)=>{
+        if(!err)
+        {
+            res.send({msg:"Sub Category Added Successfully."})
+        }
+        else{
+            res.send(err)
+        }
+    })
+})
+
+
+
+//Select All SubCategory
+router.get('/AllSubCategory/:id',(req,res)=>{
+
+    let sql="Select * from Subject;";
+
+    connection.query(sql,(err,rows,fields)=>{
+        if(!err)
+        {
+            res.send(rows)
+        }
+        else{
+            res.send({msg:"Error in Fatching Data!"})
+        }
+    })
+})
+
+
+//Delete SubCategory
+router.post('/DeleteSubCategory',(req,res)=>{
+
+    let sql="Delete from Subject where SubjectID=?";
+    connection.query(sql,[req.body.ID],(err,rows,fields)=>{
+            if(!err)
+            {
+                res.send({msg:"Data Deleted!"})
+            }
+            else
+            {
+                res.send(err)
+            }
+    })
+})
+
+
+
+
+
+
+
+
 
 router.get('/AllStudent/:id',(req,res)=>{
-
-
 
     let sql=`select Student.Name,Student.Email,Student.Contact,Student.StudentID,Student.UniqueID,Student.Picture,batch.BatchName,Student.Rate,batch.BatchID from Student left join Studentbatch
     on Student.StudentID=Studentbatch.StudentID  left join batch on batch.BatchID=Studentbatch.BatchID  where Student.ClassID=${req.params.id}`
@@ -28,7 +138,6 @@ router.get('/AllStudent/:id',(req,res)=>{
 //Create Batch.
 router.post('/CreateBatch',(req,res)=>{
     
-
     Name=req.body.CourseName
     BacthName=req.body.BacthName
     Term=req.body.Term
@@ -123,12 +232,14 @@ connection.query(`select * from Student where Email='${Email}'`,(err,rows,fields
 })
 
 
+
+
+//select All Teacher
 router.get('/AllTeacher/:id',(req,res)=>{
 
+    let sql='Select Name,ClassID,TeacherID,Email from Teacher where ClassID=?'
 
-    let sql=`select Teacher.Name,Teacher.Email,Teacher.Contact,Teacher.TeacherID,Teacher.UniqueID,Teacher.Picture,Teacher.Rate from Teacher where ClassID=${req.params.id}`
-
-    connection.query(sql,(err,rows,fields)=>{
+    connection.query(sql,[req.params.id],(err,rows,fields)=>{
         if(!err)
         {
             res.send(rows)
@@ -140,7 +251,6 @@ router.get('/AllTeacher/:id',(req,res)=>{
 })
 
 
-
 //Create Teacher login .
 router.post('/NewTeacher',(req,res)=>{
 
@@ -150,21 +260,16 @@ router.post('/NewTeacher',(req,res)=>{
     ClassID=req.body.ClassID
     UniqueID=uuid('',Email.slice(0,-9)).slice(5)
 
-    
-    d=new Date()
-    date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
-    
-
 connection.query(`select * from Teacher where Email='${Email}'`,(err,rows,fields)=>{
 
     if(!err){
         if(rows.length==0)
         { 
-            let sql="insert into Teacher(Name,Email,Date,ClassId) Values(?,?,?,?)"
-            connection.query(sql,[Name,Email,date,ClassID],(error,rows,fields)=>{
+            let sql="insert into Teacher(Name,Email,UniqueID,ClassId) Values(?,?,?,?)"
+            connection.query(sql,[Name,Email,UniqueID,ClassID],(error,rows,fields)=>{
                if(!error)
                {
-                    res.send({meg:"Data Inserted."}) 
+                    res.send({msg:"Data Inserted."}) 
                 }
                else{
                 res.send({msg:"Error in Inserting Data!"})
@@ -173,7 +278,7 @@ connection.query(`select * from Teacher where Email='${Email}'`,(err,rows,fields
         }
         else{
             res.send({
-                msg:"Email Id Already Register!"
+                msg:"Email id already register!"
             })
         }
     }
@@ -182,6 +287,27 @@ connection.query(`select * from Teacher where Email='${Email}'`,(err,rows,fields
     }
 })
 })
+
+
+
+//Delete Teacher Record 
+router.post('/DeleteFaculty',(req,res)=>{
+
+    let sql='Delete from Teacher where TeacherID=?'
+
+    connection.query(sql,[req.body.id],(err,rows,fields)=>{
+        if(!err)
+        {
+            res.send({msg:"Data Deleted."})
+        }
+        else{
+            res.send({mes:"Error in Facthing Data"})
+        }
+    })
+})
+
+
+
 
 
 
@@ -227,11 +353,9 @@ connection.query(`UPDATE Student SET Name=?,Email =? WHERE StudentID=?`,[Name,Em
 
 router.put('/UpdateTeacher',(req,res)=>{
 
-
     Email=req.body.Email
     Name=req.body.Name
     TeacherID=req.body.StudentID
-    
 
 connection.query(`UPDATE Teacher SET Name=?,Email =? WHERE TeacherID=?`,[Name,Email,TeacherID],(err,rows,fields)=>{
 
@@ -248,9 +372,6 @@ connection.query(`UPDATE Teacher SET Name=?,Email =? WHERE TeacherID=?`,[Name,Em
 
 
 router.post('/NewCourse',(req,res)=>{
-
-        console.log(req.body)
-
         ClassID=req.body.ClassID
         Discription=req.params.Discription
         Name=req.body.Name
@@ -269,7 +390,7 @@ console.log(sql)
 connection.query(sql,[ClassID,Name,Discription,TotalFess,StartDate,EndDate,Duration,TeachBy,DiscountedAmount],(err,rows,fields)=>{
 
     if(!err){
-            
+
         res.send({mes:"Data Inserted!!"})
     }
     else{
@@ -316,8 +437,6 @@ router.post('/Login',(req,res)=>{
 
 
 //New User for DashBoard Login only Class owner can do that.
-
-
 router.post('/NewLogin',(req,res)=>{
 
     
@@ -372,7 +491,6 @@ router.post('/Forgatepassword',(req,res)=>{
 
                 if(rows.length!==0)
                 {
-
                     connection.query('update Classlogin set Password=? where Email=?',[Password,Email])   
                     //call function to send mail..
                     res.send({msg:"Email is Sent to With New Password"})

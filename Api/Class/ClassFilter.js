@@ -40,8 +40,7 @@ router.get('/Total',(req,res)=>{
 router.get('/Filter/:start',(req,res)=>{
 
     let start=parseInt(req.params.start)
-
-
+    
     connection.query('select Class.Name ,Class.Email,Class.ClassID,Class.Contact,Class.City,Class.Town,Class.State,Class.Type,Class.Varified,Classvisitor.Rate,Classvisitor.Visitor from Class left join Classvisitor on Class.ClassID=Classvisitor.ClassID where Class.Status=1 LIMIT ?,1',
         [start],(err,rows,fields)=>{
 

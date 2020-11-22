@@ -122,7 +122,7 @@ router.get("/FullData/:id",(req,res)=>{
 
 //Teacher By Id final
 router.get("/TeacherProfile/:id",(req,res)=>{
-    let sql="select Teacher.Name,Teacher.TeacherID,Teacherdetail.Rate,Teacher.Picture,Teacherdetail.Qualification,Teacherdetail.Experience,Teacherdetail.Biogrphy from Teacher left join Teacherdetail on Teacher.TeacherID =Teacherdetail.TeacherID WHERE Teacher.TeacherID=?";
+    let sql="select Teacher.Name,Teacher.TeacherID,Teacherdetail.Rate,Teacher.Picture,Teacherdetail.Qualification,Teacherdetail.Experience,Teacherdetail.Biography from Teacher left join Teacherdetail on Teacher.TeacherID =Teacherdetail.TeacherID WHERE Teacher.TeacherID=?";
      
     connection.query(sql,req.params.id,(err,rows,fields)=>{
         if(!err){
@@ -138,11 +138,12 @@ router.get("/TeacherProfile/:id",(req,res)=>{
                 else{
                     res.send(Data)
                 }
+                
             })
         }
         else{
             res.status(400)
-            res.send({msg:"Error in Fatching Data"})
+            res.send(err)
         }
     })
 })
@@ -233,6 +234,87 @@ router.get("/AllReview/:id",(req,res)=>{
             }
     })
 })
+
+
+//All stream
+router.get("/stream",(req,res)=>{
+    connection.query(`select distinct(Name) from Stream;`,(err,rows,fields)=>{
+            if(!err){
+                res.send(rows)
+            }
+            else{
+                res.status(400)
+                res.send({msg:"Error in Fatching Data"})
+            }
+    })
+})
+
+//Enter Review class
+
+router.post('/ClassReview',(req,res)=>{
+    connection.query('insert into Classreview(UserID,ClassID,Name,Message,Rate,Visible,UserType) value(?,?,?,?,?,?,?)',
+    [req.body.ID,req.body.ClassID,req.body.Name,req.body.Message,req.body.Rate,1,req.body.User]
+    ,(err,rows,fileds)=>{
+        if(!err)
+        {  
+            res.send({msg:'Review Added'})
+            connection.query('select sum(Rate)/count(*) as Rate from Classreview where ClassID=?',[req.body.ClassID],(err,rows,fileds)=>{
+                var rate=rows[0]       
+            connection.query("Select * from Classvisitor where ClassID=?",[req.body.ClassID],(err,rows,fields)=>{
+                if(!err)
+                {
+                    if(rows.length)
+                    {
+                        connection.query("update Classvisitor set Rate=? where ClassID=?",[rate.Rate,req.body.ClassID])
+                    }
+                    else
+                    {
+                        connection.query("insert into Classvisitor(Rate,ClassID) value(?,?)",[rate.Rate,req.body.ClassID])
+                    }
+                }   
+            })
+        }) 
+        }
+        else{
+            res.send(err)
+        }
+    })
+})
+
+
+//Enter Review Teacher
+
+router.post('/TeacherReview',(req,res)=>{
+    connection.query('insert into Teacherreview(UserID,TeacherID,Name,Message,Rate,Vissible,UserType) value(?,?,?,?,?,?,?)',
+    [req.body.ID,req.body.TeacherID,req.body.Name,req.body.Message,req.body.Rate,1,req.body.User]
+    ,(err,rows,fileds)=>{
+        if(!err)
+        {
+            res.send({msg:'Review Added'})
+
+            connection.query('select sum(Rate)/count(*) as Rate from Teacherreview where TeacherID=?',[req.body.TeacherID],(err,rows,fileds)=>{
+                var rate=rows[0]       
+            connection.query("Select TeacherID from Teacherdetail where TeacherID=?",[req.body.TeacherID],(err,rows,fields)=>{
+                if(!err)
+                {
+                    if(rows.length)
+                    {
+                        connection.query("update Teacherdetail set Rate=? where TeacherID=?",[rate.Rate,req.body.TeacherID])
+                    }
+                    else
+                    {
+                        connection.query("insert into Teacherdetail(Rate,TeacherID) value(?,?)",[rate.Rate,req.body.TeacherID])
+                    }
+                }   
+            })
+        })
+        }
+        else{
+            res.send(err)
+        }
+    })
+})
+
 
 
 

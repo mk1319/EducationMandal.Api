@@ -3,7 +3,7 @@ const connection=require('../../mysqlconnection')
 const uuid=require('uniqid')
 const fs=require('fs')
 const path=require('path')
-
+const sendmail=require('../../Mail');
 
 const router=express.Router()
 
@@ -261,17 +261,31 @@ router.post('/NewTeacher',(req,res)=>{
     Name=req.body.Name
     ClassID=req.body.ClassID
     UniqueID=uuid('',Email.slice(0,-9)).slice(5)
+    Password=uuid().slice(5)
 
 connection.query(`select * from Teacher where Email='${Email}'`,(err,rows,fields)=>{
 
     if(!err){
         if(rows.length==0)
         { 
-            let sql="insert into Teacher(Name,Email,UniqueID,ClassId) Values(?,?,?,?)"
-            connection.query(sql,[Name,Email,UniqueID,ClassID],(error,rows,fields)=>{
+            let sql="insert into Teacher(Name,Email,UniqueID,ClassId,Password) Values(?,?,?,?,?)"
+            connection.query(sql,[Name,Email,UniqueID,ClassID,Password],(error,rows,fields)=>{
                if(!error)
                {
                     res.send({msg:"Data Inserted."}) 
+
+                    //Call function for email
+
+                    res.send({msg:"Login Credential is Send to You!!"})
+                    const mailOptions = {
+                       from: 'noreply@educationmandal.com', 
+                       to: Email, 
+                       subject: 'EducationMandal Login Detail ', 
+                       html: `<h3>Password:- ${Password}</h3>`
+                     };
+
+                   sendmail.sendMail(mailOptions, function (err, info) {});
+
                 }
                else{
                 res.send({msg:"Error in Inserting Data!"})
@@ -331,7 +345,6 @@ router.get("/profile/:id",(req,res)=>{
 //update name,
 
 router.post("/updateprofile",(req,res)=>{
-
 
     connection.query("update Class set Name=? where ClassID=?;Select * from Classbrief where ClassID=?",[req.body.Name,req.body.ClassID,req.body.ClassID],(err,rows,fields)=>{
         if(!err)
@@ -597,8 +610,6 @@ router.post('/UploadLogo/:id', (req, res) => {
 
 router.post('/UploadImage/:id', (req, res) => {
 
-        console.log(path.dirname(path.dirname(__dirname)))
-
     if (req.files === null) {
         return res.status(400).json({ msg: 'No file uploaded' });
       } 
@@ -642,8 +653,7 @@ router.post('/UploadImage/:id', (req, res) => {
 
   router.get('/city',(req,res)=>{
 
-    res.send({'TRIPURA': ['AGARTALA'], 
-    'UTTAR PRADESH': ['AGRA', 'ALLAHABAD', 'BALRAMPUR', 'BAREILLY', 'DEHRADUN', 'FIROZABAD', 'GARHMUKTESHWAR', 'GORAKHPUR', 'HARIDWAR', 'JHANSI', 'KANPUR', 'KUSHINAGAR', 'LUCKNOW', 'MATHURA', 'MORADABAD', 'NAINITAL', 'NOIDA', 'RAI BAREILLY', 'RAM NAGAR', 'RISHIKESH', 'SONAULI', 'VARANASI'], 'GUJARAT': ['AHMEDABAD', 'ANAND', 'ANKLESHWAR', 'BALASINOR', 'BHARUCH', 'BHAVANGADH', 'BHAVNAGAR', 'BHUJ', 'DWARKA', 'GANDHIDHAM', 'GANDHINAGAR', 'GONDAL', 'JAMBUGODHA', 'JAMNAGAR', 'JUNAGADH', 'LOTHAL', 'MANDAVI', 'MORBI', 'PALANPUR', 'PALITANA', 'PORBANDAR', 'POSHINA', 'RAJKOT', 'RAJPIPLA', 'SAPUTARA', 'SASAN GIR', 'SURAT', 'VADODARA', 'VAPI', 'WANKANER'], 'MIZORAM': ['AIZWAL'], 'RAJASTHAN': ['AJMER', 'ALSISAR', 'ALWAR', 'BAMBORA', 'BEHROR', 'BHARATPUR', 'BIKANER', 'BUNDI', 'CHITTORGARH', 'DAUSA', 'JAIPUR', 'JAISALMER', 'JODHPUR', 'JOJAWAR', 'KHIMSAR', 'KOTA', 'KUMBALGARH', 'MANDAWA', 'MOUNT ABU', 'NAGAUR FORT', 'OSIAN', 'PALI', 'PHALODI', 'PUSKHAR', 'RAJASTHAN', 'RAJSAMAND', 'RAMGARH', 'RANAKPUR', 'RANTHAMBORE', 'ROHETGARH', 'SAWAI MADHOPUR', 'SIANA', 'UDAIPUR'], 'KERALA': ['ALLEPPEY', 'ASHTAMUDI', 'CALICUT', 'CANANNORE', 'GOKHARNA', 'GURUVAYOOR', 'IDUKKI', 'KASARGOD', 'KOCHIN', 'KOLLAM', 'KOTTAYAM', 'KOVALAM', 'KUMARAKOM', 'KUMILY', 'MALAPPURAM', 'MARARRI', 'MUNNAR', 'NADUKANI', 'PALLAKAD', 'POOVAR', 'RANNY', 'THEKKADY', 'THIRUVANANTHAPURAM', 'THRISSUR', 'VAGAMON', 'VARKALA', 'WAYANAD'], 'MAHARASHTRA': ['ALIBAUG', 'AURANGABAD', 'BHANDARDARA', 'CHIPLUN', 'DABHOSA', 'DAPOLI', 'DIVE AGAR', 'DURSHET', 'GANAPATIPULE', 'IGATPURI', 'JALGAON', 'JAWHAR', 'KARJAT', 'KASHID', 'KHANDALA', 'KOLHAPUR', 'LONAVALA', 'MAHABALESHWAR', 'MALSHEJ GHAT', 'MALVAN', 'MANMAD', 'MATHERAN', 'MUMBAI', 'MUNDRA', 'MURUD JANJIRA', 'NAGOTHANE', 'NAGPUR', 'NANDED', 'NAPNE', 'NASIK', 'NAVI MUMBAI', 'NERAL', 'PANCHGANI', 'PANHALA', 'PANVEL', 'PUNE', 'RATNAGIRI', 'SAJAN', 'SAWANTWADI', 'SHIRDI', 'TAPOLA', 'THANE', 'VERAVAL', 'VIKRAMGADH'], 'UTTARANCHAL': ['ALMORA', 'BADRINATH', 'BETALGHAT', 'BHIMTAL', 'BINSAR', 'CHAMBA', 'CORBETT NATIONAL PARK', 'GANGOTRI', 'GARHWAL', 'KANATAL', 'KASHIPUR', 'KEDARNATH', 'MARCHULA', 'MUKTESHWAR', 'MUSSOORIE', 'PANTNAGAR', 'RANIKHET', 'SATTAL', 'UTTARKASHI', 'YAMUNOTRI'], 'HARYANA': ['AMBALA', 'FARIDABAD', 'GURGAON', 'HANSI', 'KARNAL', 'MANESAR', 'PANCHKULA', 'PINJORE'], 'MADHYA PRADESH': ['AMLA', 'BANDHAVGARH', 'BHOPAL', 'CHITRAKOOT', 'GWALIOR', 'INDORE', 'KANHA', 'KHAJURAHO', 'ORCHHA', 'PACHMARHI', 'PANNA', 'PENCH', 'UJJAIN'], 'PUNJAB': ['AMRITSAR', 'CHANDIGARH', 'JALANDHAR', 'LUDHIANA', 'MOHALI', 'PATIALA', 'PHAGWARA'], 'HIMACHAL PRADESH': ['AULI', 'BADDI', 'CHAIL', 'DALHOUSIE', 'DHARAMSHALA', 'KASAULI', 'KAZA', 'KHAJJIAR', 'KUFRI', 'KULLU', 'MANALI', 'MCLEODGANJ', 'NAHAN', 'NALDHERA', 'PALAMPUR', 'PARWANOO', 'PRAGPUR', 'SHIMLA', 'SOLAN'], 'KARNATAKA': ['BANDIPUR', 'BANGALORE', 'BELGAUM', 'CHIKMAGALUR', 'COORG', 'DANDELI', 'HALEBID', 'HAMPI', 'HASSAN', 'HOSPET', 'HUBLI', 'KABINI', 'KARWAR', 'MALPE', 'MANGALORE', 'MYSORE', 'NAGARHOLE', 'SHARAVANBELGOLA', 'SHIVANASAMUDRA', 'UDUPI'], 'ORISSA': ['BARBIL', 'BERHAMPUR', 'BHUBANESHWAR', 'CUTTACK', 'PURI', 'ROURKELA', 'SHIMLIPAL'], 'CHHATTISGARH': ['BHILAI', 'RAIPUR'], 'BIHAR': ['BODHGAYA', 'GAYA', 'PATNA', 'RAJGIR'], 'TAMIL NADU': ['CHENNAI', 'COIMBATORE', 'COONOOR', 'HOSUR', 'KANCHIPURAM', 'KANYAKUMARI', 'KARUR', 'KODAIKANAL', 'KOTAGIRI', 'KUMBAKONAM', 'MADURAI', 'MAHABALIPURAM', 'NAGAPATTINAM', 'NILGIRI', 'OOTY', 'PONDICHERRY', 'RAMESHWARAM', 'SALEM', 'SIVAGANGA DISTRICT', 'TANJORE', 'THIRVANNAMALAI', 'TIRUCHIRAPALLI', 'TIRUPUR', 'VELANKANNI', 'VELLORE', 'YERCAUD'], 'UNION TERRITORY of DADRA & NAGAR HAVELI': ['DAMAN'], 'WEST BENGAL': ['DARJEELING', 'DIGHA', 'DOOARS', 'DURGAPUR', 'KALIMPONG', 'KOLKATA', 'KURSEONG', 'MANDORMONI', 'RAICHAK', 'RISHYAP', 'SILIGURI', 'SUNDERBAN', 'TARAPITH'], 'ASSAM': ['DIBRUGARH', 'GUWAHATI', 'JORHAT', 'KAZIRANGA'], 'UNION TERRITORY OF DADRA & NAGAR HAVELI': ['DIU', 'SILVASSA'], 'SIKKIM': ['GANGTOK', 'RAVANGLA', 'YUKSOM'], 'NEW DELHI': ['GHAZIABAD'], 'GOA': ['GOA'], 'NCR': ['GREATER NOIDA'], 'JAMMU & KASHMIR': ['GULMARG', 'JAMMU', 'KARGIL', 'KATRA', 'LEH', 'PAHALGAM', 'PATHANKOT', 'PATNITOP', 'SRINAGAR', 'UDHAMPUR'], 'ANDHRA PRADESH': ['HYDERABAD', 'PUTTAPARTHI', 'RAJAHMUNDRY', 'SECUNDERABAD', 'TIRUPATI', 'VIJAYAWADA', 'VISHAKAPATNAM'], 'MANIPUR': ['IMPHAL'], 'Madhya Pradesh': ['JABALPUR'], 'JHARKHAND': ['JAMSHEDPUR', 'RANCHI'], 'UTTARAKHAND': ['KAUSANI'], 'NORTH SIKKIM': ['LACHUNG'], 'UNION TERRITORY OF LAKSHADWEEP': ['LAKSHADWEEP'], 'NEPAL': ['LUMBINI'], 'DELHI': ['NEW DELHI'], 'WEST SIKKIM': ['PELLING'], 'ANDAMAN & NICOBAR ISLANDS': ['PORT BLAIR'], 'MEGHALAYA': ['SHILLONG']})
-  })
+    res.send({'City': ['Agartala', 'Agra', 'Ahmedabad', 'Aizwal', 'Ajmer', 'Allahabad', 'Alleppey', 'Alibaug', 'Almora', 'Alsisar', 'Alwar', 'Ambala', 'Amla', 'Amritsar', 'Anand', 'Ankleshwar', 'Ashtamudi', 'Auli', 'Aurangabad', 'Baddi', 'Badrinath', 'Balasinor', 'Balrampur', 'Bambora', 'Bandhavgarh', 'Bandipur', 'Bangalore', 'Barbil', 'Bareilly', 'Behror', 'Belgaum', 'Berhampur', 'Betalghat', 'Bharatpur', 'Bhandardara', 'Bharuch', 'Bhavangadh', 'Bhavnagar', 'Bhilai', 'Bhimtal', 'Bhopal', 'Bhubaneshwar', 'Bhuj', 'Bikaner', 'Binsar', 'Bodhgaya', 'Bundi', 'Calicut', 'Canannore', 'Chail', 'Chamba', 'Chandigarh', 'Chennai', 'Chikmagalur', 'Chiplun', 'Chitrakoot', 'Chittorgarh', 'Coimbatore', 'Coonoor', 'Coorg', 'Corbett national park', 'Cuttack', 'Dabhosa', 'Dalhousie', 'Daman', 'Dandeli', 'Dapoli', 'Darjeeling', 'Dausa', 'Dehradun', 'Dharamshala', 'Dibrugarh', 'Digha', 'Diu', 'Dive agar', 'Dooars', 'Durgapur', 'Durshet', 'Dwarka', 'Faridabad', 'Firozabad', 'Gangotri', 'Gangtok', 'Ganapatipule', 'Gandhidham', 'Gandhinagar', 'Garhmukteshwar', 'Garhwal', 'Gaya', 'Ghaziabad', 'Goa', 'Gokharna', 'Gondal', 'Gorakhpur', 'Greater noida', 'Gulmarg', 'Gurgaon', 'Guruvayoor', 'Guwahati', 'Gwalior', 'Halebid', 'Hampi', 'Hansi', 'Haridwar', 'Hassan', 'Hospet', 'Hosur', 'Hubli', 'Hyderabad', 'Idukki', 'Igatpuri', 'Imphal', 'Indore', 'Jabalpur', 'Jaipur', 'Jaisalmer', 'Jalandhar', 'Jalgaon', 'Jambugodha', 'Jammu', 'Jamnagar', 'Jamshedpur', 'Jawhar', 'Jhansi', 'Jodhpur', 'Jojawar', 'Jorhat', 'Junagadh', 'Kabini', 'Kalimpong', 'Kanatal', 'Kanchipuram', 'Kanha', 'Kanpur', 'Kanyakumari', 'Kargil', 'Karjat', 'Karnal', 'Karur', 'Karwar', 'Kasargod', 'Kasauli', 'Kashipur', 'Kashid', 'Katra', 'Kausani', 'Kaza', 'Kaziranga', 'Kedarnath', 'Khajjiar', 'Khajuraho', 'Khandala', 'Khimsar', 'Kochin', 'Kodaikanal', 'Kolhapur', 'Kolkata', 'Kollam', 'Kota', 'Kotagiri', 'Kottayam', 'Kovalam', 'Kufri', 'Kumbalgarh', 'Kullu', 'Kumarakom', 'Kumbakonam', 'Kumily', 'Kurseong', 'Kushinagar', 'Lachung', 'Leh', 'Lakshadweep', 'Lonavala', 'Lothal', 'Lucknow', 'Ludhiana', 'Lumbini', 'Madurai', 'Mahabaleshwar', 'Mahabalipuram', 'Malappuram', 'Malpe', 'Malshej ghat', 'Malvan', 'Manali', 'Mandavi', 'Mandawa', 'Manesar', 'Mararri', 'Mandormoni', 'Mangalore', 'Manmad', 'Marchula', 'Matheran', 'Mathura', 'Mcleodganj', 'Mohali', 'Mount abu', 'Moradabad', 'Morbi', 'Mukteshwar', 'Mumbai', 'Mundra', 'Munnar', 'Murud janjira', 'Mussoorie', 'Mysore', 'Nadukani', 'Nagapattinam', 'Nagarhole', 'Nagaur fort', 'Nagothane', 'Nagpur', 'Nahan', 'Nainital', 'Naldhera', 'Nanded', 'Napne', 'Nasik', 'Navi mumbai', 'Neral', 'New delhi', 'Nilgiri', 'Noida', 'Ooty', 'Orchha', 'Osian', 'Pachmarhi', 'Palampur', 'Palanpur', 'Pali', 'Pahalgam', 'Palitana', 'Pallakad', 'Panchgani', 'Panchkula', 'Panna', 'Panhala', 'Panvel', 'Pantnagar', 'Parwanoo', 'Patiala', 'Pathankot', 'Patna', 'Patnitop', 'Pelling', 'Pench', 'Phagwara', 'Phalodi', 'Pinjore', 'Pondicherry', 'Poovar', 'Porbandar', 'Port blair', 'Poshina', 'Pragpur', 'Pune', 'Puri', 'Puskhar', 'Puttaparthi', 'Rai bareilly', 'Raichak', 'Raipur', 'Rajasthan', 'Rajgir', 'Rajkot', 'Rajpipla', 'Rajsamand', 'Rajahmundry', 'Rameshwaram', 'Ram nagar', 'Ramgarh', 'Ranakpur', 'Ranchi', 'Ranikhet', 'Ranny', 'Ranthambore', 'Ratnagiri', 'Ravangla', 'Rishikesh', 'Rishyap', 'Rohetgarh', 'Rourkela', 'Sajan', 'Salem', 'Saputara', 'Sasan gir', 'Sattal', 'Sawai madhopur', 'Sawantwadi', 'Secunderabad', 'Shillong', 'Shimla', 'Shimlipal', 'Shirdi', 'Sharavanbelgola', 'Shivanasamudra', 'Siana', 'Siliguri', 'Silvassa', 'Sivaganga district', 'Solan', 'Sonauli', 'Srinagar', 'Sunderban', 'Surat', 'Tanjore', 'Tapola', 'Tarapith', 'Thane', 'Thekkady', 'Thirvannamalai', 'Thiruvananthapuram', 'Tiruchirapalli', 'Tirupur', 'Tirupati', 'Thrissur', 'Udaipur', 'Udhampur', 'Udupi', 'Ujjain', 'Uttarkashi', 'Vadodara', 'Vagamon', 'Varkala', 'Vapi', 'Varanasi', 'Velankanni', 'Vellore', 'Veraval', 'Vijayawada', 'Vikramgadh', 'Vishakapatnam', 'Wayanad', 'Wankaner', 'Yamunotri', 'Yercaud', 'Yuksom'], 'States': ['Andhra pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal pradesh', 'Jammu & kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Ncr', 'Nepal', 'New delhi', 'North sikkim', 'Orissa', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil nadu', 'Tripura', 'Uttar pradesh', 'Uttarakhand', 'Uttaranchal', 'West bengal', 'West sikkim']})
+})
 
 module.exports=router

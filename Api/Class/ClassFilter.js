@@ -26,23 +26,23 @@ router.get('/FilterOption',(req,res)=>{
 
 router.get('/Total',(req,res)=>{
 
-    connection.query('select Count(*) as Total from Class;',(err,rows,fields)=>{
+    connection.query('select Count(*) as Total from Class where Status=1;',(err,rows,fields)=>{
         if(!err)
         {
             res.send(rows[0])
         }
         else{
             res.send({mes:"Error in Fatching Data"})
-        }
+        }   
     })
 })
 
 router.get('/Filter/:start',(req,res)=>{
 
-    let start=parseInt(req.params.start)
+    let count=parseInt(req.params.start)
     
-    connection.query('select Class.Name ,Class.Email,Class.ClassID,Class.Contact,Class.City,Class.Town,Class.State,Class.Type,Class.Varified,Classvisitor.Rate,Classvisitor.Visitor from Class left join Classvisitor on Class.ClassID=Classvisitor.ClassID where Class.Status=1 LIMIT ?,1',
-        [start],(err,rows,fields)=>{
+    connection.query('select Class.Name ,Class.Email,Class.ClassID,Class.Contact,Class.City,Class.Town,Class.State,Class.Type,Class.Varified,Classvisitor.Rate,Classvisitor.Visitor from Class left join Classvisitor on Class.ClassID=Classvisitor.ClassID where Class.Status=1 LIMIT ?,5',
+        [count],(err,rows,fields)=>{
 
         if(!err)
         {
@@ -68,6 +68,7 @@ router.get('/Filter/:start',(req,res)=>{
         }
     })
 })
+
 
 
 

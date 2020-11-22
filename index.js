@@ -4,10 +4,10 @@ const Classrouter=require('./Api/Class/Classes')
 const ClassFilter=require('./Api/Class/ClassFilter')
 const Userrouter=require('./Api/User/UserData')
 const Blog=require('./Api/Blog/Blog')
-const Admin=require('./Api/Admin/Class')
+const Admin=require('./Api/Admin/AdminControl')
 const cors=require('cors')
 const fileUpload = require('express-fileupload');
- 
+const TeacherDash=require('./Api/ClassDash/TeacherDash') 
 
 const ClassDashboard=require('./Api/ClassDash/ClassData')
 
@@ -28,14 +28,11 @@ app.use(body.json())
 app.use(express.urlencoded({extended:true}))
 
 app.use('/Class',Classrouter);
-
-app.use('/ClassDash',ClassDashboard)
-
-
+app.use('/ClassDash',ClassDashboard);
+app.use('/TeacherDash',TeacherDash);
 app.use('/ClassFilter',ClassFilter);
 app.use('/User',Userrouter)
 app.use('/Blog',Blog)
-
 app.use('/Admin',Admin)
 
 

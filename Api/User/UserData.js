@@ -58,7 +58,7 @@ router.post('/NewUser',(req,res)=>{
     })
 })
 
-
+//Login
 router.post('/Login',(req,res)=>{
         let email=req.body.Email
         let Password=req.body.Password
@@ -88,6 +88,71 @@ router.post('/Login',(req,res)=>{
         })
 })
 
+
+//Google login 
+router.post('/GoogleLogin',(req,res)=>{
+    let email=req.body.Email
+    
+    connection.query(`select * from Register where Email=?`,[email],(err,rows,fields)=>{
+        if(!err)
+        {
+            if(rows.length==0){
+                   return res.send({isLogin:false,msg:"Email is not register!!"})
+            }
+
+            d=new Date()
+            date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+        connection.query('Update Register set LastLogin=? where ID=?',[d,rows[0].ID])
+
+            return res.send({Email:rows[0].Email,
+                            ID:rows[0].ID,User:rows[0].UserType,
+                            isLogin:true,Name:rows[0].Name
+                            ,msg:"Login Sucessful"})
+        }
+        else{
+            res.status(400)
+            res.send({msg:"Error in Fatching Data!",isLogin:false})
+        }
+    })
+})
+//Update Password Checking
+router.post("/CheckPassword", (req, res) => {
+    connection.query(
+      "Select Password from Register where ID=?",
+      [req.body.ID],
+      (err, rows, fields) => {
+        if (!err) {
+          if (rows.length) {
+            if (rows[0].Password == req.body.Password) {
+              res.send({ Status: true, msg: "Verified, Enter New Password" });
+            } else {
+              res.send({ Status: false, msg: "Wrong Password" });
+            }
+          } else {
+            res.send({ msg: "Not found any data" });
+          }
+        } else {
+          res.send({ msg: "Error in during update!" });
+        }
+      }
+    );
+});
+  
+  //Update Password Change
+  router.post("/ChangePassword", (req, res) => {
+      connection.query(
+        "UPDATE Register SET Password=? WHERE ID=?",
+        [req.body.Password,req.body.ID],
+        (err, rows, fields) => {
+          if (!err) {
+            res.send({msg:"Password Change Successful"})
+          } else {
+            res.send({ msg: "Error in during update!" });
+          }
+        }
+      );
+    });
+  
 
 
 

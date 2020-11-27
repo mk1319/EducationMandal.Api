@@ -33,6 +33,31 @@ router.post('/Login',(req,res)=>{
         })
 })
 
+//Google Login
+
+router.post('/GoogleLogin',(req,res)=>{
+    let email=req.body.Email
+
+    connection.query(`select * from Teacher where Email=?`,[email],(err,rows,fields)=>{
+        if(!err)
+        {
+            if(rows.length==0){
+                   return res.send({isLogin:false,msg:"Email is not register!!"})
+            }
+            
+            d=new Date()
+            date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+        connection.query('Update Teacher set LastLogin=? where TeacherID=?',[date,rows[0].TeacherID])
+                
+            return res.send({Email:rows[0].Email,ID:rows[0].TeacherID,User:rows[0].Name,isLogin:true,msg:"Login Sucessful"})
+        }
+        else{
+            res.status(400)
+            res.send({msg:"Error in Fatching Data!",isLogin:false})
+        }
+    })
+})
+
 //Fatch Update profile Data
 router.get('/getdata/:id',(req,res)=>{
 

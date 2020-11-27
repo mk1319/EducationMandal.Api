@@ -7,6 +7,66 @@ const sendmail=require('../../Mail');
 
 const router=express.Router()
 
+
+//Login Router
+
+
+router.post('/Login',(req,res)=>{
+    let email=req.body.Email
+    let Password=req.body.Password
+
+    connection.query(`select * from Classlogin where Email=?`,[email],(err,rows,fields)=>{
+        if(!err)
+        {
+            if(rows.length==0){
+                   return res.send({isLogin:false,msg:"Email is not register!!"})
+            }
+            if(rows[0].Password!==Password){
+                return    res.send({msg:"Incorrect Password",isLogin:false})
+            }
+
+            d=new Date()
+            date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+            connection.query('Update Classlogin set LastLogin=? where AccessID=?',[d,rows[0].AccessID])
+
+            return res.send({Email:rows[0].Email,ID:rows[0].ClassID,User:rows[0].UserType,Name:rows[0].Name,AccessID:rows[0].AccessID,isLogin:true,msg:"Login Sucessful"})
+        }
+        else{
+            res.status(400)
+            res.send({msg:"Error in Fatching Data!",isLogin:false})
+        }
+    })
+})
+
+//GoogleLogin Router
+
+
+router.post('/GoogleLogin',(req,res)=>{
+    let email=req.body.Email
+
+    connection.query(`select * from Classlogin where Email=?`,[email],(err,rows,fields)=>{
+        if(!err)
+        {
+            if(rows.length==0){
+                   return res.send({isLogin:false,msg:"Email is not register!!"})
+            }
+            
+            d=new Date()
+            date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+            connection.query('Update Classlogin set LastLogin=? where AccessID=?',[d,rows[0].AccessID])
+
+            return res.send({Email:rows[0].Email,ID:rows[0].ClassID,User:rows[0].UserType,Name:rows[0].Name,AccessID:rows[0].AccessID,isLogin:true,msg:"Login Sucessful"})
+        }
+        else{
+            res.status(400)
+            res.send({msg:"Error in Fatching Data!",isLogin:false})
+        }
+    })
+})
+
+
+
+
 //Add category
 router.post('/NewCategory/:id',(req,res)=>{
 
@@ -114,7 +174,75 @@ router.post('/DeleteSubCategory',(req,res)=>{
     })
 })
 
+//Check Class for Branch
+router.get('/CheckBranch/:id',(req,res)=>{
 
+    let sql="select ClassID from Class where ClassID=?";
+    connection.query(sql,[req.params.id],(err,rows,fields)=>{
+            if(!err)
+            {
+                if(rows.length)
+                {
+                    res.send({status:true})
+                }
+                else
+                {
+                    res.send({status:false})
+                }
+            }
+            else
+            {
+                res.send(err)
+            }
+    })
+})
+
+//add branch
+router.post('/AddBranch',(req,res)=>{
+
+    let sql="insert into Branch(ClassID,Name,LinkOfClass) value(?,?,?)";
+    connection.query(sql,[req.body.ID,req.body.Name,req.body.Link],(err,rows,fields)=>{
+            if(!err)
+            {
+                res.send({msg:"Branch Inserted!"})
+            }
+            else
+            {
+                res.send({msg:"Error Try after sometimes!"})
+            }
+    })
+})
+
+//select all branch
+router.get('/Branch/:id',(req,res)=>{
+
+    let sql="select * from Branch where ClassID=?";
+    connection.query(sql,[req.params.id],(err,rows,fields)=>{
+            if(!err)
+            {
+                res.send(rows)
+            }
+            else
+            {
+                res.send({msg:"Error Try after sometimes!"})
+            }
+    })
+})
+//delete branch
+router.post('/Branch',(req,res)=>{
+
+    let sql="DELETE FROM Branch where BranceID=?";
+    connection.query(sql,[req.body.id],(err,rows,fields)=>{
+            if(!err)
+            {
+                res.send(rows)
+            }
+            else
+            {
+                res.send({msg:"Error Try after sometimes!"})
+            }
+    })
+})
 
 
 
@@ -325,9 +453,9 @@ router.post('/DeleteFaculty',(req,res)=>{
 //Update Profile class dash function
 router.get("/profile/:id",(req,res)=>{
 
-    let sql="select Class.Name,Classbrief.AboutClass,Classbrief.Tagline,Classimage.Image,Classlocation.Lon,Classlocation.Lat,Classlocation.Address " 
+    let sql="select Class.Name,Class.Town,Classbrief.AboutClass,Classbrief.Tagline,Classimage.Image,Classlocation.Lon,Classlocation.Lat,Classlocation.Address " 
     +"from Class left join Classbrief on Class.ClassID=Classbrief.ClassID left join Classimage on Class.ClassID=Classimage.ClassID " 
-    +"left join Classlocation on Class.ClassID=Classlocation.ClassID where Class.ClassID=?"
+    +"left join Classlocation on Class.ClassID=Classlocation.ClassID  where Class.ClassID=?"
     connection.query(sql,[req.params.id],(err,rows,fields)=>{
         if(!err)
         {
@@ -338,15 +466,13 @@ router.get("/profile/:id",(req,res)=>{
             res.send(err)
         }
     })
-
-
 })
 
-//update name,
 
+//update name,
 router.post("/updateprofile",(req,res)=>{
 
-    connection.query("update Class set Name=? where ClassID=?;Select * from Classbrief where ClassID=?",[req.body.Name,req.body.ClassID,req.body.ClassID],(err,rows,fields)=>{
+    connection.query("update Class set Name=?,Town=? where ClassID=?;Select * from Classbrief where ClassID=?",[req.body.Name,req.body.Town,req.body.ClassID,req.body.ClassID],(err,rows,fields)=>{
         if(!err)
         {
             if(rows[1].length)
@@ -364,9 +490,45 @@ router.post("/updateprofile",(req,res)=>{
             res.send({msg:"Error in during update!"})
         }
     })
-
-
 })
+
+//Update Password Checking
+router.post("/CheckPassword", (req, res) => {
+  connection.query(
+    "Select Password from Classlogin where ClassID=?",
+    [req.body.ClassID],
+    (err, rows, fields) => {
+      if (!err) {
+        if (rows.length) {
+          if (rows[0].Password == req.body.Password) {
+            res.send({ Status: true, msg: "Verified, Enter New Password" });
+          } else {
+            res.send({ Status: false, msg: "Wrong Password" });
+          }
+        } else {
+          res.send({ msg: "Not found any data" });
+        }
+      } else {
+        res.send({ msg: "Error in during update!" });
+      }
+    }
+  );
+});
+
+//Update Password Change
+router.post("/ChangePassword", (req, res) => {
+    connection.query(
+      "UPDATE Classlogin SET Password=? WHERE ClassID=?",
+      [req.body.Password,req.body.ClassID],
+      (err, rows, fields) => {
+        if (!err) {
+          res.send({msg:"Password Change Successful"})
+        } else {
+          res.send({ msg: "Error in during update!" });
+        }
+      }
+    );
+  });
 
 
 //Update Student data
@@ -452,39 +614,6 @@ connection.query(sql,[ClassID,Name,Discription,TotalFess,StartDate,EndDate,Durat
     }
 })
 })
-
-
-
-//Login Router
-
-
-router.post('/Login',(req,res)=>{
-    let email=req.body.Email
-    let Password=req.body.Password
-
-    connection.query(`select * from Classlogin where Email=?`,[email],(err,rows,fields)=>{
-        if(!err)
-        {
-            if(rows.length==0){
-                   return res.send({isLogin:false,msg:"Email is not register!!"})
-            }
-            if(rows[0].Password!==Password){
-                return    res.send({msg:"Incorrect Password",isLogin:false})
-            }
-
-            d=new Date()
-            date=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
-            connection.query('Update Classlogin set LastLogin=? where AccessID=?',[d,rows[0].AccessID])
-
-            return res.send({Email:rows[0].Email,ID:rows[0].ClassID,User:rows[0].UserType,Name:rows[0].Name,AccessID:rows[0].AccessID,isLogin:true,msg:"Login Sucessful"})
-        }
-        else{
-            res.status(400)
-            res.send({msg:"Error in Fatching Data!",isLogin:false})
-        }
-    })
-})
-
 
 
 
